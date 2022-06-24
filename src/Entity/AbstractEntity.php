@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use phpDocumentor\Reflection\Types\Integer;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 
 abstract class AbstractEntity
@@ -17,6 +18,7 @@ abstract class AbstractEntity
     #[Id]
     #[GeneratedValue]
     #[Column(type: "integer")]
+    #[Groups("withId")]
     protected $id;
 
 

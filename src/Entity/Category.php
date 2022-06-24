@@ -29,6 +29,9 @@ class Category extends AbstractEntity
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: Book::class)]
     private $books;
 
+    #[ORM\Column(type: 'string', length: 255)]
+    private $slug;
+
     public function __construct()
     {
         $this->books = new ArrayCollection();
@@ -121,6 +124,18 @@ class Category extends AbstractEntity
                 $book->setCategory(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): self
+    {
+        $this->slug = $slug;
 
         return $this;
     }
