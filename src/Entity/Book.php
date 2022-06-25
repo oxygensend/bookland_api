@@ -2,52 +2,92 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\RangeFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\BookRepository;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\Serializer\Annotation as Serializer;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ApiResource(
-    normalizationContext: ['groups' ]
+    collectionOperations: ['post', 'get'],
+    itemOperations: [
+        "get" => ["normalization_context" => [
+            "groups" => "getOne"
+        ]
+        ],
+        "patch",
+        "delete"
+    ],
+    denormalizationContext: ['groups' => 'addNew'],
+    formats: ['json', 'jsonld'],
+    normalizationContext: ['groups' => 'getAll'], paginationItemsPerPage: 10
 )
 ]
+#[ApiFilter(BooleanFilter::class, properties: ['enabled', 'featured'])]
+#[ApiFilter(RangeFilter::class, properties: ['price'])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'title' => 'partial',
+    'category' => 'exact',
+    'author' => 'exact',
+])]
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book extends AbstractEntity
 {
     #[ORM\Column(type: 'string', length: 255)]
-    private $title;
+    #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
+    private string $title;
 
     #[ORM\Column(type: 'float')]
-    private $price;
+    #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
+    private float $price;
 
     #[ORM\Column(type: 'integer')]
-    private $amount;
+    #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
+    private int $amount;
 
     #[ORM\Column(type: 'boolean')]
-    private $enabled = 1;
+    #[Serializer\Groups('addNew')]
+    private bool $enabled = true;
 
     #[ORM\Column(type: 'boolean')]
-    private $featured = 0;
+    #[Serializer\Groups('addNew')]
+    private bool $featured = false;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $imageName;
+    #[Serializer\Groups('addNew')]
+    private string $imageName;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $imagePath;
+    #[Serializer\Groups(['getAll', 'getOne'])]
+    #[Vich\UploadableField(mapping: "book_image", fileNameProperty: "image")]
+    private string $imagePath;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'books')]
-    private $category;
+    #[Serializer\Groups('getOne', 'addNew')]
+    private Category $category;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $slug;
+    #[Gedmo\Slug(fields: ['title','id'])]
+    #[Serializer\Groups(['getAll'])]
+    private string $slug;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $description;
+    #[Serializer\Groups(['getOne'])]
+    private string $description;
 
     #[ORM\Column(type: 'date_immutable', nullable: true)]
-    private $publicationDate;
+    #[Serializer\Groups(['getOne', 'addNew'])]
+    private \DateTimeImmutable $publicationDate;
 
     #[ORM\Column(type: 'string', length: 255)]
-    private $author;
+    #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
+    private string $author;
+
 
     public function getFeatured()
     {
@@ -148,10 +188,10 @@ class Book extends AbstractEntity
         return $this->slug;
     }
 
+
     public function setSlug(string $slug): self
     {
         $this->slug = $slug;
-
         return $this;
     }
 
@@ -163,6 +203,15 @@ class Book extends AbstractEntity
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    #[Serializer\SerializedName('description')]
+    #[Serializer\Groups('addNew')]
+    public function setTextDescription(string $description): self
+    {
+        $this->description = nl2br($description);
 
         return $this;
     }
