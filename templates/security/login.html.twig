@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Log in!{% endblock %}
+
+{% block body %}
+<div class="login-wrapper">
+    <div class="login-box">
+        <div class="border-login" style="width: 500px;margin-top: 50px">
+            <div class="heading">Bookland admin</div>
+            <form method="POST">
+                {% if error %}
+                    <p class="text-center alert-danger">
+                        {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </p>
+                {% endif %}
+
+                <input type="hidden" name="_csrf_token"
+                       value="{{ csrf_token('authenticate') }}"
+                >
+                <div class="field">
+                    <i class="fas fa-user"></i>
+                    <input type="email"
+                           value="{{ last_username }}"
+                           name="email" id="inputEmail"
+                           class="form-control" placeholder="Email"
+                           required autofocus/>
+                </div>
+                <div class="field">
+                    <i class="fas fa-lock"></i>
+                    <input type="password"
+                           name="password"
+                           id="inputPassword"
+                           class="form-control"
+                           placeholder="Password"
+                           required/>
+                </div>
+                <div class="field">
+                    <input type="checkbox"  id="remember_me" name="_remember_me" value="on"/>
+                    <label for="remember_me">Save login data?</label>
+                </div>
+                <button class="submit-button"
+                       type="submit"
+                >Login</button>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

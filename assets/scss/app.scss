@@ -1,0 +1,101 @@
+// Put your fonts here.
+@import '~@fortawesome/fontawesome-free/scss/fontawesome';
+@import '~@fortawesome/fontawesome-free/scss/brands';
+@import '~@fortawesome/fontawesome-free/scss/regular';
+@import '~@fortawesome/fontawesome-free/scss/solid';
+
+@import '~bootstrap/scss/bootstrap';
+
+
+.login-wrapper
+{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #ffffff;
+}
+
+.heading
+{
+  background-color: #F5F5F5;
+  padding: 16px 17px;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 13px;
+  border-radius: 5px 5px 0px 0px;
+  text-align: center;
+}
+
+.login-box .border-login
+{
+  background: #FFFFFF;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.login-box .field
+{
+  display: flex;
+  border-bottom: 1px solid #F0F0F0;
+  background-color: #ffffff;
+}
+
+.login-box .field > i
+{
+  width: 48px;
+  background-color: #ffffff;
+  color: #CCC;
+  height: 48px;
+  padding: 16px 17px;
+}
+
+.login-box .field:hover > i
+{
+  color: #888;
+}
+
+.login-box .field > input[type="text"],
+.login-box .field > input[type="email"],
+.login-box .field > input[type="password"]
+{
+  width: 100%;
+  border: none;
+  padding: 10px;
+  font-size: 12px;
+  color: #555;
+  min-width: 250px;
+}
+
+.login-box .field > input[type="checkbox"]
+{
+  margin: 12px 17px;
+}
+
+.login-box .field > label
+{
+  font-size: 12px;
+  margin-left: 10px;
+  line-height: 37px;
+  top: 1px;
+  position: relative;
+}
+
+.login-box .submit-button
+{
+  width: 100%;
+  border: none;
+  background-color: #11ed4f;
+  color: #FFF;
+  padding: 15px 30px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 0px 0px 5px 5px;
+}
+
+.login-box .submit-button:hover
+{
+  background-color: #04cc65;
+}

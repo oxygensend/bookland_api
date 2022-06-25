@@ -15,6 +15,12 @@ abstract class AbstractEntity
 {
     use TimestampableEntity;
 
+
+    public function __construct() {
+        $this->setCreatedAt(new \DateTime());
+        $this->setUpdatedAt(new \DateTime());
+    }
+
     #[Id]
     #[GeneratedValue]
     #[Column(type: "integer")]
