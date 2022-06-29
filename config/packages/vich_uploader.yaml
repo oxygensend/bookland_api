@@ -2,10 +2,19 @@ vich_uploader:
     db_driver: orm
 
     mappings:
-        books:
+        image_book:
             uri_prefix:         '%host%%app.path.image_book%'
             upload_destination: '%kernel.project_dir%/public%app.path.image_book%'
             inject_on_load:     true
             delete_on_update:   true
             delete_on_remove:   true
             namer:              vich_uploader.namer_uniqid
+
+        image_category:
+            uri_prefix:         '%host%%app.path.image_category%'
+            upload_destination: '%kernel.project_dir%/public%app.path.image_category%'
+            inject_on_load:     true
+            delete_on_update:   true
+            delete_on_remove:   true
+            namer:              vich_uploader.namer_uniqid
+

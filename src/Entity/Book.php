@@ -6,10 +6,12 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\RangeFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Filters\BookSortFilter;
 use App\Repository\BookRepository;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\Serializer\Annotation as Serializer;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
@@ -25,19 +27,21 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
     ],
     denormalizationContext: ['groups' => 'addNew'],
     formats: ['json', 'jsonld'],
-    normalizationContext: ['groups' => 'getAll'], paginationItemsPerPage: 10
+    normalizationContext: ['groups' => 'getAll'], paginationItemsPerPage: 30
 )
 ]
 #[ApiFilter(BooleanFilter::class, properties: ['enabled', 'featured'])]
 #[ApiFilter(RangeFilter::class, properties: ['price'])]
 #[ApiFilter(SearchFilter::class, properties: [
-    'title' => 'partial',
     'category' => 'exact',
     'author' => 'exact',
 ])]
+#[ApiFilter(BookSortFilter::class, properties: ['sort'])]
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book extends AbstractEntity
 {
+    private const IMG_DIR = '/images/uploads/books';
+
     #[ORM\Column(type: 'string', length: 255)]
     #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
     private string $title;
@@ -60,15 +64,13 @@ class Book extends AbstractEntity
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Serializer\Groups('addNew')]
-    private string $imageName;
+    private string $image;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Serializer\Groups(['getAll', 'getOne'])]
-    #[Vich\UploadableField(mapping: "book_image", fileNameProperty: "image")]
-    private string $imagePath;
+    #[Vich\UploadableField(mapping: "image_book", fileNameProperty: "image")]
+    private string $imageFile;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'books')]
-    #[Serializer\Groups('getOne', 'addNew')]
+    #[Serializer\Groups(['getOne', 'addNew'])]
     private Category $category;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -88,6 +90,9 @@ class Book extends AbstractEntity
     #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
     private string $author;
 
+    #[ORM\Column(type: 'float')]
+    #[Serializer\Groups('getAll')]
+    private float|int $popularityRate = 0;
 
     public function getFeatured()
     {
@@ -147,28 +152,26 @@ class Book extends AbstractEntity
         return $this;
     }
 
-    public function getImageName(): ?string
+    public function getImageFile(): ?File
     {
-        return $this->imageName;
+        return $this->imageFile;
     }
 
-    public function setImageName(string $imageName): self
+    public function setImageName(?File $imageFile): self
     {
-        $this->imageName = $imageName;
+        $this->imageFile = $imageFile;
 
-        return $this;
+        if ($imageFile) {
+            $this->updatedAt = new \DateTime('now');
+        }
     }
-
+    #[Serializer\SerializedName('item_path')]
     public function getImagePath(): ?string
     {
-        return $this->imagePath;
-    }
-
-    public function setImagePath(string $imagePath): self
-    {
-        $this->imagePath = $imagePath;
-
-        return $this;
+        if ($this->image) {
+            return self::IMAGE_DIR.$this->image;
+        }
+        return '';
     }
 
     public function getCategory(): ?Category
@@ -238,5 +241,17 @@ class Book extends AbstractEntity
         $this->author = $author;
 
         return $this;
+    }
+
+
+    public function getPopularityRate(): float|int
+    {
+        return $this->popularityRate;
+    }
+
+
+    public function setPopularityRate(float|int $popularityRate): void
+    {
+        $this->popularityRate = $popularityRate;
     }
 }
