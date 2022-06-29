@@ -117,12 +117,14 @@ class Category extends AbstractEntity
         if ($imageFile) {
             $this->updatedAt = new \DateTime('now');
         }
+
+        return $this;
     }
     #[Serializer\SerializedName('item_path')]
     public function getImagePath(): ?string
     {
         if ($this->image) {
-            return self::IMAGE_DIR.$this->image;
+            return self::IMG_DIR.$this->image;
         }
         return '';
     }
