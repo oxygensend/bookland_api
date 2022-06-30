@@ -30,5 +30,9 @@ services:
         bind:
             $decoratedDataPersister: '@api_platform.doctrine.orm.data_persister'
 
-    # add more service definitions when explicit configuration is needed
+
+    App\OpenApi\JwtDecorator:
+        decorates: 'api_platform.openapi.factory'
+        arguments: ['@.inner']
+        # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

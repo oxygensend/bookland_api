@@ -14,7 +14,7 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
-    collectionOperations: ['post'],
+    collectionOperations: ['post' => ["path" => "register"]],
     itemOperations: ['get', 'patch', 'delete'],
     denormalizationContext: ['groups' => 'addNew'],
 )]
