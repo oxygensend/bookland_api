@@ -47,7 +47,7 @@ class Category extends AbstractEntity
     private string $imageFile;
 
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: Book::class)]
-    private Book $books;
+    private Collection $books;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Slug(fields: ['name'])]
@@ -63,9 +63,7 @@ class Category extends AbstractEntity
     public function __construct()
     {
         $this->books = new ArrayCollection();
-
-        $this->setCreatedAt(new \DateTime());
-        $this->setUpdatedAt(new \DateTime());
+        parent::__construct();
     }
 
 

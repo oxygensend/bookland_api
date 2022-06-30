@@ -26,5 +26,9 @@ services:
     App\Doctrine\Extensions\EnabledExtension:
         tags: [api_platform.doctrine.orm.query_extension.collection]
 
+    App\DataPersister\UserDataPersister:
+        bind:
+            $decoratedDataPersister: '@api_platform.doctrine.orm.data_persister'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

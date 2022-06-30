@@ -2,40 +2,81 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
+use App\Validator\IsPasswordConfirmed;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
+#[ApiResource(
+    collectionOperations: ['post'],
+    itemOperations: ['get', 'patch', 'delete'],
+    denormalizationContext: ['groups' => 'addNew'],
+)]
+#[IsPasswordConfirmed]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User extends  AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface
+class User extends AbstractEntity implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[ORM]
-    private $email;
+    #[Serializer\Groups(['addNew'])]
+    #[Assert\Email]
+    #[Assert\NotBlank]
+    private string $email;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Serializer\Groups(['addNew'])]
+    #[Assert\Length(min: 2, max: 50,
+        minMessage: "Name have to be at least 2 characters",
+        maxMessage: "Name have to be no longer than 50 characters")]
+    #[Assert\NotBlank]
+    private string $name;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Serializer\Groups(['addNew'])]
+    #[Assert\Length(min: 2, max: 50,
+        minMessage: "Surname have to be at least 2 characters",
+        maxMessage: "Surname have to be no longer than 50 characters")]
+    #[Assert\NotBlank]
+    private string $surname;
 
     #[ORM\Column(type: 'json')]
-    private $roles = [];
+    private array $roles = [];
 
-    #[ORM\Column(type: 'string')]
-    private $password;
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $password;
+
+    #[Assert\NotBlank]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/',
+        message: 'Password have to be minimum 8 characters and contains at least one letter and number.'
+
+    )]
+    #[Assert\Length(min: 8, minMessage: "Password have to be at least 8 characters")]
+    private ?string $plainPassword;
+
+    #[Assert\NotBlank]
+    private string $password_confirmation;
 
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
-    private $phone;
+    private string $phone;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Address::class, orphanRemoval: true)]
-    private $addresses;
+    private Collection $addresses;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Payment::class)]
-    private $payments;
+    private Collection $payments;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Order::class)]
-    private $orders;
+    private Collection $orders;
 
     public function __construct()
     {
+        parent::__construct();
         $this->addresses = new ArrayCollection();
         $this->payments = new ArrayCollection();
         $this->orders = new ArrayCollection();
@@ -61,7 +102,7 @@ class User extends  AbstractEntity implements UserInterface, PasswordAuthenticat
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string)$this->email;
     }
 
     /**
@@ -104,7 +145,7 @@ class User extends  AbstractEntity implements UserInterface, PasswordAuthenticat
     public function eraseCredentials()
     {
         // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
+        $this->plainPassword = null;
     }
 
     public function getPhone(): ?string
@@ -208,4 +249,55 @@ class User extends  AbstractEntity implements UserInterface, PasswordAuthenticat
 
         return $this;
     }
+
+
+    public function getPlainPassword(): string
+    {
+        return $this->plainPassword;
+    }
+
+
+    #[Serializer\Groups(['addNew'])]
+    #[Serializer\SerializedName('password')]
+    public function setPlainPassword(string $plainPassword): void
+    {
+        $this->plainPassword = $plainPassword;
+    }
+
+
+    public function getPasswordConfirmation(): string
+    {
+        return $this->password_confirmation;
+    }
+
+
+    #[Serializer\Groups(['addNew'])]
+    public function setPasswordConfirmation(string $password_confirmation): void
+    {
+        $this->password_confirmation = $password_confirmation;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+
+    public function getSurname(): string
+    {
+        return $this->surname;
+    }
+
+    public function setSurname(string $surname): void
+    {
+        $this->surname = $surname;
+    }
+
+
 }
