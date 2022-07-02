@@ -17,3 +17,13 @@ services:
       MYSQL_ROOT_PASSWORD: '12345'
       MYSQL_DATABASE: 'bookland_test'
       MYSQL_PASSWORD: '12345'
+
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: always
+    logging:
+      driver: "none"
+    ports:
+      - "8025:8025"
+      - "1025:1025"

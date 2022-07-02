@@ -26,14 +26,19 @@ class UserDataPersister implements ContextAwareDataPersisterInterface
      */
     public function persist($data, array $context = [])
     {
+        if (($context['item_operation_name'] ?? null) === 'patch') {
 
-        if (($data->getPlainPassword() && $data->getPasswordConfirmation()) &&
-            $data->getPlainPassword() === $data->getPasswordConfirmation()) {
+            $isPasswordValid = $this->passwordHasher->isPasswordValid(
+                $data,
+                $data->getOldPassword()
+            );
+            if ($isPasswordValid) {
+                $this->setPassword($data);
+            }
 
-            $data->setPassword($this->passwordHasher->hashPassword($data, $data->getPlainPassword()));
-            $data->eraseCredentials();
+        } else {
+            $this->setPassword($data);
         }
-
         $this->decoratedDataPersister->persist($data);
 
     }
@@ -43,4 +48,13 @@ class UserDataPersister implements ContextAwareDataPersisterInterface
         $this->decoratedDataPersister->remove($data);
     }
 
+    private function setPassword($data)
+    {
+        if (($data->getPlainPassword() && $data->getPasswordConfirmation()) &&
+            $data->getPlainPassword() === $data->getPasswordConfirmation()) {
+
+            $data->setPassword($this->passwordHasher->hashPassword($data, $data->getPlainPassword()));
+            $data->eraseCredentials();
+        }
+    }
 }

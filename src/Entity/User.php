@@ -3,6 +3,9 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Controller\Api\EmailVerification;
+use App\Controller\Api\ResendVerificationToken;
+use App\Controller\Api\ResetPasswordController;
 use App\Repository\UserRepository;
 use App\Validator\IsPasswordConfirmed;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -14,8 +17,33 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
-    collectionOperations: ['post' => ["path" => "register"]],
-    itemOperations: ['get', 'patch', 'delete'],
+    collectionOperations: ['post' => ["path" => "register"],
+        ],
+    itemOperations: [
+        'get',
+        'patch',
+        'delete',
+        'registration_confirmation' => [
+            'method' => 'GET',
+            'path' => '/verify_email/{id}',
+            'controller' => EmailVerification::class,
+        ],
+        'resend_verification_token' => [
+            'method' => 'POST',
+            'path' => '/resend_token/{id}',
+            'controller' => ResendVerificationToken::class,
+            'denormalization_context' => ['groups' => 'empty'],
+            'write' => false
+        ],
+        'reset_password' => [
+            'method' => 'PATCH',
+            'path' => '/reset_password/{id}',
+            'controller' => ResetPasswordController::class,
+            'denormalization_context' => ['groups' => 'empty'],
+            'write' => false
+
+        ]
+        ],
     denormalizationContext: ['groups' => 'addNew'],
 )]
 #[IsPasswordConfirmed]
@@ -59,11 +87,20 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[Assert\Length(min: 8, minMessage: "Password have to be at least 8 characters")]
     private ?string $plainPassword;
 
+    private ?string $oldPassword;
+
     #[Assert\NotBlank]
     private string $password_confirmation;
 
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private string $phone;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private Assert\DateTime|null $emailConfirmedAt=null;
+
+    #[Serializer\Groups('verifyEmail')]
+    #[Serializer\SerializedName('code')]
+    private string $confrimationCode;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Address::class, orphanRemoval: true)]
     private Collection $addresses;
@@ -297,6 +334,38 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     public function setSurname(string $surname): void
     {
         $this->surname = $surname;
+    }
+
+    public function getEmailConfirmedAt(): ?Assert\DateTime
+    {
+        return $this->emailConfirmedAt;
+    }
+
+    public function setEmailConfirmedAt(?Assert\DateTime $emailConfirmedAt): void
+    {
+        $this->emailConfirmedAt = $emailConfirmedAt;
+    }
+
+
+    public function getConfrimationCode(): string
+    {
+        return $this->confrimationCode;
+    }
+
+
+    public function setConfrimationCode(string $confrimationCode): void
+    {
+        $this->confrimationCode = $confrimationCode;
+    }
+
+    public function getOldPassword(): ?string
+    {
+        return $this->oldPassword;
+    }
+
+    public function setOldPassword(?string $oldPassword): void
+    {
+        $this->oldPassword = $oldPassword;
     }
 
 
