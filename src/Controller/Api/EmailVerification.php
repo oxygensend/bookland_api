@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,14 +14,26 @@ use SymfonyCasts\Bundle\VerifyEmail\VerifyEmailHelperInterface;
 #[AsController]
 class EmailVerification extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly VerifyEmailHelperInterface $verifyEmailHelper,
+    )
+    {}
 
-    public function __invoke(User $data, Request $request, VerifyEmailHelperInterface $verifyEmailHelper ): JsonResponse
+    public function __invoke(User $data, Request $request ): JsonResponse
     {
+        if($data->getEmailConfirmedAt() !== null)
+            return $this->json(['error' => 'Your email address is confirmed', 401]);
+
         try {
-            $verifyEmailHelper->validateEmailConfirmation(
+            $this->verifyEmailHelper->validateEmailConfirmation(
                 $request->getUri(),
                 $data->getId(),
                 $data->getEmail());
+            $data->setEmailConfirmedAt(new \DateTime());
+            $this->em->persist($data);
+            $this->em->flush();
+
         }  catch(VerifyEmailExceptionInterface $e){
 
             return $this->json(['error' => $e->getReason(), $e->getCode()]);

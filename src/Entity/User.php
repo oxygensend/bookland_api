@@ -17,30 +17,43 @@ use Symfony\Component\Serializer\Annotation as Serializer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
-    collectionOperations: ['post' => ["path" => "register"],
+    collectionOperations: ['post' => [
+        "path" => "register",
+        'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
+    ],
         ],
     itemOperations: [
-        'get',
-        'patch',
-        'delete',
+        'get' => [
+            'security' => "is_granted('ROLE_USER')",
+        ],
+        'patch' =>
+        [
+            'security' => "is_granted('ROLE_USER')",
+        ],
+        'delete' =>[
+            'security' => "is_granted('ROLE_USER')",
+        ],
         'registration_confirmation' => [
             'method' => 'GET',
             'path' => '/verify_email/{id}',
             'controller' => EmailVerification::class,
+            'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
         ],
         'resend_verification_token' => [
             'method' => 'POST',
             'path' => '/resend_token/{id}',
             'controller' => ResendVerificationToken::class,
             'denormalization_context' => ['groups' => 'empty'],
-            'write' => false
+            'write' => false,
+            'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
         ],
         'reset_password' => [
             'method' => 'PATCH',
             'path' => '/reset_password/{id}',
             'controller' => ResetPasswordController::class,
             'denormalization_context' => ['groups' => 'empty'],
-            'write' => false
+            'write' => false,
+            'security' => "is_granted('ROLE_USER')",
 
         ]
         ],
@@ -54,7 +67,6 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[Serializer\Groups(['addNew'])]
     #[Assert\Email]
     #[Assert\NotBlank]
-    #[Assert\Unique]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 100)]
@@ -96,8 +108,8 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private string $phone;
 
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private Assert\DateTime|null $emailConfirmedAt=null;
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private $emailConfirmedAt=null;
 
     #[Serializer\Groups('verifyEmail')]
     #[Serializer\SerializedName('code')]
@@ -342,7 +354,7 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
         return $this->emailConfirmedAt;
     }
 
-    public function setEmailConfirmedAt(?Assert\DateTime $emailConfirmedAt): void
+    public function setEmailConfirmedAt( \DateTime $emailConfirmedAt): void
     {
         $this->emailConfirmedAt = $emailConfirmedAt;
     }

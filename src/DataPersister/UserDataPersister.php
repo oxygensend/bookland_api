@@ -37,6 +37,7 @@ class UserDataPersister implements ContextAwareDataPersisterInterface
             }
 
         } else {
+            $data->setRoles(['ROLE_USER']);
             $this->setPassword($data);
         }
         $this->decoratedDataPersister->persist($data);

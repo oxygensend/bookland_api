@@ -13,7 +13,7 @@ class ResendVerificationToken extends AbstractController
     public function __invoke(User $data, EmailSenderService $emailSender): JsonResponse
     {
         if($data->getEmailConfirmedAt() !== null)
-            return $this->json(['error' => 'Your email address has been confirmed'],401);
+            return $this->json(['error' => 'Your email address is confirmed'],401);
 
         $emailSender->sendMail($data);
 
