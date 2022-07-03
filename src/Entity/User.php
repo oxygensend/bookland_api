@@ -54,6 +54,7 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[Serializer\Groups(['addNew'])]
     #[Assert\Email]
     #[Assert\NotBlank]
+    #[Assert\Unique]
     private string $email;
 
     #[ORM\Column(type: 'string', length: 100)]
