@@ -5,6 +5,7 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use App\CategorySortFilter;
 use App\Repository\CategoryRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -16,22 +17,29 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ApiResource(
     collectionOperations: ['get'],
-    itemOperations: [
-    ],
+    itemOperations: [ 'get' => ['normalization_context' => [
+        'groups' => 'category:getOne'
+    ]]],
     formats: ['json', 'jsonld'],
-    paginationItemsPerPage: 30,
+    normalizationContext: ['groups' => 'category:getAll']
 )]
 #[ApiFilter(BooleanFilter::class,properties: ['featured'])]
+#[ApiFilter(CategorySortFilter::class, properties: ['sort'])]
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 class Category extends AbstractEntity
 {
 
     private const IMG_DIR = '/images/uploads/categories';
 
-    #[ORM\Column(type:"integer", nullable: true)]
-    private int $parent;
+    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'children')]
+    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
+    private self $parent;
+
+    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: Category::class)]
+    private Collection $children;
 
     #[ORM\Column(type: 'string', length: 255)]
+    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
     private string $name;
 
     #[ORM\Column(type: 'boolean')]
@@ -44,20 +52,24 @@ class Category extends AbstractEntity
     private string $image;
 
     #[Vich\UploadableField(mapping: "image_category", fileNameProperty: "image")]
-    private string $imageFile;
+    private ?File $imageFile;
 
     #[ORM\OneToMany(mappedBy: 'category', targetEntity: Book::class)]
     private Collection $books;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Slug(fields: ['name'])]
+    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
     private string $slug;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Serializer\Groups(['category:getOne'])]
+    private ?string $description;
 
     #[ORM\Column(type: 'string', length: 2048)]
     private string $categories;
 
     #[ORM\Column(type: 'float')]
-    #[Serializer\Groups('getAll')]
     private float|int $popularityRate = 0;
 
     public function __construct()
@@ -66,6 +78,29 @@ class Category extends AbstractEntity
         parent::__construct();
     }
 
+    public function __toString(): string
+    {
+        $name = $this->getName();
+        return $this->buildTree($name, $this->getParent());
+    }
+
+    public function buildTree(&$name = '', Category $parent = null): string
+    {
+        if ($parent !== null) {
+            $name = $parent->getName() . " > " . $name;
+            if($parent->getParent() !== null) {
+                $this->buildTree($name, $parent->getParent());
+            }
+        }
+        return $name;
+    }
+
+    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
+    #[Serializer\SerializedName('tree')]
+    public function getTree(): string
+    {
+        return $this->__toString();
+    }
 
     public function getName(): ?string
     {
@@ -118,7 +153,8 @@ class Category extends AbstractEntity
 
         return $this;
     }
-    #[Serializer\SerializedName('item_path')]
+    #[Serializer\SerializedName('image_path')]
+    #[Serializer\Groups(['category:getAll'])]
     public function getImagePath(): ?string
     {
         if ($this->image) {
@@ -126,8 +162,6 @@ class Category extends AbstractEntity
         }
         return '';
     }
-
-
 
     public function getBooks(): Collection
     {
@@ -169,12 +203,12 @@ class Category extends AbstractEntity
     }
 
 
-    public function getParent(): int
+    public function getParent(): self
     {
         return $this->parent;
     }
 
-    public function setParent(int $parent): void
+    public function setParent(?self $parent): void
     {
         $this->parent = $parent;
     }
@@ -214,6 +248,44 @@ class Category extends AbstractEntity
     public function setImage(string $image): void
     {
         $this->image = $image;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getChildren(): Collection
+    {
+        return $this->children;
+    }
+
+    public function addChild(self $child): self
+    {
+        if (!$this->children->contains($child)) {
+            $this->children[] = $child;
+            $child->setParent($this);
+        }
+
+        return $this;
+    }
+
+    public function removeChild(self $child): self
+    {
+        if ($this->children->contains($child)) {
+            $this->children->removeElement($child);
+            // set the owning side to null (unless already changed)
+            if ($child->getParent() === $this) {
+                $child->setParent(null);
+            }
+        }
+
+        return $this;
     }
 
 

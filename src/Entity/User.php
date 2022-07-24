@@ -348,7 +348,7 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
         $this->surname = $surname;
     }
 
-    public function getEmailConfirmedAt(): ?Assert\DateTime
+    public function getEmailConfirmedAt(): ?\DateTime
     {
         return $this->emailConfirmedAt;
     }

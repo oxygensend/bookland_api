@@ -1,0 +1,11 @@
+App\Entity\Category:
+  category_{1..100}:
+#    isbn: <isbn13()>
+#    title: <name()>
+#    price: <randomNumber()>
+#    amount:  <numberBetween(0,100)>
+#    slug: <slug()>
+#    author: <name()>
+#    description: <text()>
+#    popularityRate: <numberBetween(0,100)>
+#    publicationDate: <dateTime()
