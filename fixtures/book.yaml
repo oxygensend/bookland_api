@@ -1,0 +1,24 @@
+App\Entity\Book:
+  book_{1..100}:
+    isbn: <isbn13()>
+    title: <name()>
+    price: <randomNumber()>
+    amount:  <numberBetween(0,100)>
+    slug: <slug()>
+    author: <name()>
+    description: <text()>
+    popularityRate: <numberBetween(0,100)>
+    publicationDate: <dateTime()>
+    featured: <numberBetween(0,1)>
+  book_{101..130}:
+    isbn: <isbn13()>
+    title: <name()>
+    price: <randomNumber()>
+    amount:  <numberBetween(0,100)>
+    slug: <slug()>
+    author: <name()>
+    description: <text()>
+    popularityRate: <numberBetween(0,100)>
+    publicationDate: <dateTime()>
+    featured: <numberBetween(0,1)>
+    enabled: 0

@@ -39,6 +39,17 @@ class BookRepository extends ServiceEntityRepository
         }
     }
 
+    public function findAllEnabledWithSlugInArray(array $array): array
+    {
+        return $this->createQueryBuilder('b')
+            ->andWhere('b.slug IN (:slugs)')
+            ->andWhere('b.enabled = 1')
+            ->setParameter('slugs', $array)
+            ->getQuery()
+            ->getResult();
+
+    }
+
 //    /**
 //     * @return Book[] Returns an array of Book objects
 //     */

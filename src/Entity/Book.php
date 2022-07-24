@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Filters\BookSortFilter;
 use App\Repository\BookRepository;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\HttpFoundation\File\File;
@@ -22,15 +23,13 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
             "groups" => "getOne"
         ]
         ],
-        "patch",
-        "delete"
     ],
     denormalizationContext: ['groups' => 'addNew'],
     formats: ['json', 'jsonld'],
     normalizationContext: ['groups' => 'getAll'], paginationItemsPerPage: 30
 )
 ]
-#[ApiFilter(BooleanFilter::class, properties: ['enabled', 'featured'])]
+#[ApiFilter(BooleanFilter::class, properties: ['featured'])]
 #[ApiFilter(RangeFilter::class, properties: ['price'])]
 #[ApiFilter(SearchFilter::class, properties: [
     'category' => 'exact',
@@ -40,7 +39,11 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
 #[ORM\Entity(repositoryClass: BookRepository::class)]
 class Book extends AbstractEntity
 {
-    private const IMG_DIR = '/images/uploads/books';
+    private const IMAGE_DIR = '/images/uploads/books';
+
+    #[ORM\Column(type: 'string', length: 13, unique: true)]
+    #[Serializer\Groups(['getOne', 'addNew'])]
+    private string $isbn;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
@@ -62,12 +65,12 @@ class Book extends AbstractEntity
     #[Serializer\Groups('addNew')]
     private bool $featured = false;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    #[Serializer\Groups('addNew')]
-    private string $image;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $image;
 
     #[Vich\UploadableField(mapping: "image_book", fileNameProperty: "image")]
-    private string $imageFile;
+    #[Serializer\Groups('addNew')]
+    private File $imageFile;
 
     #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'books')]
     #[Serializer\Groups(['getOne', 'addNew'])]
@@ -82,9 +85,9 @@ class Book extends AbstractEntity
     #[Serializer\Groups(['getOne'])]
     private string $description;
 
-    #[ORM\Column(type: 'date_immutable', nullable: true)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Serializer\Groups(['getOne', 'addNew'])]
-    private \DateTimeImmutable $publicationDate;
+    private \DateTime $publicationDate;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Serializer\Groups(['getAll', 'getOne', 'addNew'])]
@@ -93,6 +96,19 @@ class Book extends AbstractEntity
     #[ORM\Column(type: 'float')]
     #[Serializer\Groups('getAll')]
     private float|int $popularityRate = 0;
+
+
+    public function getIsbn(): string
+    {
+        return $this->isbn;
+    }
+
+
+    public function setIsbn(string $isbn): void
+    {
+        $this->isbn = $isbn;
+    }
+
 
     public function getFeatured()
     {
@@ -152,27 +168,37 @@ class Book extends AbstractEntity
         return $this;
     }
 
-    public function getImageFile(): ?File
-    {
-        return $this->imageFile;
-    }
-
-    public function setImageName(?File $imageFile): self
-    {
-        $this->imageFile = $imageFile;
-
-        if ($imageFile) {
-            $this->updatedAt = new \DateTime('now');
-        }
-    }
     #[Serializer\SerializedName('item_path')]
-    public function getImagePath(): ?string
+    public function getImage(): ?string
     {
         if ($this->image) {
             return self::IMAGE_DIR.$this->image;
         }
         return '';
     }
+
+
+    public function setImage(?string $image): void
+    {
+        $this->image = $image;
+    }
+
+    public function getImageFile(): ?File
+    {
+        return $this->imageFile;
+    }
+
+    public function setImageFile(?File $imageFile): self
+    {
+        $this->imageFile = $imageFile;
+
+        if ($imageFile) {
+            $this->updatedAt = new \DateTime('now');
+        }
+
+        return $this;
+    }
+
 
     public function getCategory(): ?Category
     {
@@ -219,12 +245,12 @@ class Book extends AbstractEntity
         return $this;
     }
 
-    public function getPublicationDate(): ?\DateTimeImmutable
+    public function getPublicationDate(): ?\DateTime
     {
         return $this->publicationDate;
     }
 
-    public function setPublicationDate(\DateTimeImmutable $publicationDate): self
+    public function setPublicationDate(\DateTime $publicationDate): self
     {
         $this->publicationDate = $publicationDate;
 

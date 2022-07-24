@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ApiResource(
     collectionOperations: ['post' => [
         "path" => "register",
-        'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
+        'security' => "!is_granted('ROLE_USER')"
     ],
         ],
     itemOperations: [
@@ -37,7 +37,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             'method' => 'GET',
             'path' => '/verify_email/{id}',
             'controller' => EmailVerification::class,
-            'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
+            'security' => "!is_granted('ROLE_USER')"
         ],
         'resend_verification_token' => [
             'method' => 'POST',
@@ -45,7 +45,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             'controller' => ResendVerificationToken::class,
             'denormalization_context' => ['groups' => 'empty'],
             'write' => false,
-            'security' => "is_granted('IS_AUTHENTICATED_ANONYMOUSLY')"
+            'security' => "!is_granted('ROLE_USER')"
         ],
         'reset_password' => [
             'method' => 'PATCH',
@@ -91,13 +91,12 @@ class User extends AbstractEntity implements UserInterface, PasswordAuthenticate
     #[ORM\Column(type: 'string', length: 255)]
     private string $password;
 
-    #[Assert\NotBlank]
     #[Assert\Regex(
         pattern: '/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/',
         message: 'Password have to be minimum 8 characters and contains at least one letter and number.'
 
     )]
-    #[Assert\Length(min: 8, minMessage: "Password have to be at least 8 characters")]
+    #[Assert\NotBlank]
     private ?string $plainPassword;
 
     private ?string $oldPassword;

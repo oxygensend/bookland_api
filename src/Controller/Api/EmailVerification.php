@@ -39,6 +39,6 @@ class EmailVerification extends AbstractController
             return $this->json(['error' => $e->getReason(), $e->getCode()]);
         }
 
-        return  $this->json(['success' => 'Your e-mail address has been verified.']);
+        return  $this->json(['success' => 'Your e-mail address has been verified.'], 200);
     }
 }

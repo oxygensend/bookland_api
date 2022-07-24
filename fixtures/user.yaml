@@ -1,0 +1,13 @@
+App\Entity\User:
+  user_{1..5}:
+    name: <name()>
+    surname: <name()>
+    email: <email()>
+    password: <password()>
+
+  user_Confimed:
+    name: <name()>
+    surname: <name()>
+    email: <email()>
+    password: <password()>
+    emailConfirmedAt: <dateTime()>
