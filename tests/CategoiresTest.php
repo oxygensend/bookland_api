@@ -21,7 +21,6 @@ class CategoiresTest extends ApiTestCase
         $this->assertArrayHasKey('categories', $categories[0]);
         $this->assertArrayHasKey('tree', $categories[0]);
         $this->assertArrayHasKey('parent', $categories[0]);
-        $this->assertArrayHasKey('slug', $categories[0]);
         $this->assertArrayHasKey('image_path', $categories[0]);
 
         $this->assertJsonContains([

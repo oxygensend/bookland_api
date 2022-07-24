@@ -45,5 +45,9 @@ services:
     App\OpenApi\VerifyEmailDecorator:
         decorates: 'api_platform.openapi.factory'
         arguments: [ '@.inner' ]
+
+    App\DataProvider\CategoryDataProvider:
+        bind:
+            $collectionDataProvider: '@api_platform.doctrine.orm.default.collection_data_provider'
         # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

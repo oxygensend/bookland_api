@@ -21,7 +21,8 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
         'groups' => 'category:getOne'
     ]]],
     formats: ['json', 'jsonld'],
-    normalizationContext: ['groups' => 'category:getAll']
+    normalizationContext: ['groups' => 'category:getAll'],
+    paginationEnabled: false
 )]
 #[ApiFilter(BooleanFilter::class,properties: ['featured'])]
 #[ApiFilter(CategorySortFilter::class, properties: ['sort'])]
@@ -67,10 +68,14 @@ class Category extends AbstractEntity
     private ?string $description;
 
     #[ORM\Column(type: 'string', length: 2048)]
+    #[Serializer\Groups(['category:getAll'])]
     private string $categories;
 
     #[ORM\Column(type: 'float')]
     private float|int $popularityRate = 0;
+
+    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
+    private string $tree;
 
     public function __construct()
     {
@@ -78,28 +83,17 @@ class Category extends AbstractEntity
         parent::__construct();
     }
 
-    public function __toString(): string
-    {
-        $name = $this->getName();
-        return $this->buildTree($name, $this->getParent());
-    }
 
-    public function buildTree(&$name = '', Category $parent = null): string
-    {
-        if ($parent !== null) {
-            $name = $parent->getName() . " > " . $name;
-            if($parent->getParent() !== null) {
-                $this->buildTree($name, $parent->getParent());
-            }
-        }
-        return $name;
-    }
-
-    #[Serializer\Groups(['category:getAll', 'category:getOne'])]
-    #[Serializer\SerializedName('tree')]
     public function getTree(): string
     {
-        return $this->__toString();
+        return $this->tree;
+
+    }
+
+    public function setTree(string $tree): self
+    {
+        $this->tree = $tree;
+        return $this;
     }
 
     public function getName(): ?string
